@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rojosoft Control | Requerimientos y Tiempos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">R</div>
+        <div>
+          <h1>Rojosoft Control</h1>
+          <p>Requerimientos + tiempos</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-link active" data-section="dashboard">Dashboard</button>
+        <button class="nav-link" data-section="requerimientos">Requerimientos</button>
+        <button class="nav-link" data-section="kanban">Etapas</button>
+        <button class="nav-link" data-section="jornada">Jornada</button>
+        <button class="nav-link" data-section="reportes">Reportes</button>
+      </nav>
+
+      <div class="sidebar-panel compact">
+        <h3>Resumen rápido</h3>
+        <div class="mini-stat-row">
+          <span>Pendientes</span>
+          <strong id="sidePending">0</strong>
+        </div>
+        <div class="mini-stat-row">
+          <span>Sin respuesta</span>
+          <strong id="sideNoReply">0</strong>
+        </div>
+        <div class="mini-stat-row">
+          <span>En espera config.</span>
+          <strong id="sideWaitingConfig">0</strong>
+        </div>
+      </div>
+
+      <div class="sidebar-panel compact">
+        <h3>Productividad del día</h3>
+        <div class="progress-ring-card">
+          <div class="progress-ring">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="48"></circle>
+              <circle id="progressCircle" class="progress" cx="60" cy="60" r="48"></circle>
+            </svg>
+            <div class="progress-center">
+              <strong id="productivePercent">0%</strong>
+              <span>cumplido</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <h2 id="sectionTitle">Dashboard operativo</h2>
+          <p id="sectionSubtitle">Control diario de tareas, tiempos y seguimiento de tickets</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="ghost-btn" id="exportBtn">Exportar datos</button>
+          <label class="ghost-btn file-label">
+            Importar datos
+            <input type="file" id="importInput" accept="application/json" hidden>
+          </label>
+          <button class="danger-btn" id="resetDemoBtn">Restaurar demo</button>
+        </div>
+      </header>
+
+      <section class="section active" id="dashboardSection">
+        <div class="stats-grid">
+          <article class="stat-card highlight">
+            <span>Requerimientos activos</span>
+            <strong id="statActive">0</strong>
+            <small>Todo lo que no está validado o cancelado</small>
+          </article>
+          <article class="stat-card">
+            <span>Sin respuesta</span>
+            <strong id="statNoReply">0</strong>
+            <small>Tickets con seguimiento pendiente</small>
+          </article>
+          <article class="stat-card">
+            <span>En espera de configurar</span>
+            <strong id="statWaitingConfig">0</strong>
+            <small>Req. detenidos por configuración</small>
+          </article>
+          <article class="stat-card">
+            <span>Horas productivas hoy</span>
+            <strong id="statProductiveToday">00:00</strong>
+            <small>Objetivo diario: 07:00</small>
+          </article>
+        </div>
+
+        <div class="dashboard-grid">
+          <article class="panel">
+            <div class="panel-head">
+              <h3>Seguimiento prioritario</h3>
+              <button class="text-btn" id="openCreateFromDashboard">+ Nuevo requerimiento</button>
+            </div>
+            <div id="priorityList" class="priority-list"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <h3>Estado de jornada</h3>
+              <span class="badge dark" id="currentShiftBadge">Turno 9 a 18</span>
+            </div>
+            <div class="day-resume">
+              <div>
+                <span>Ingreso</span>
+                <strong id="resumeCheckIn">--:--</strong>
+              </div>
+              <div>
+                <span>Salida estimada</span>
+                <strong id="resumeEstimatedEnd">18:00</strong>
+              </div>
+              <div>
+                <span>Almuerzo</span>
+                <strong id="resumeLunch">01:00</strong>
+              </div>
+              <div>
+                <span>Diferencia</span>
+                <strong id="resumeDifference">00:00</strong>
+              </div>
+            </div>
+            <div class="timeline-box" id="todayTimeline"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="requerimientosSection">
+        <div class="toolbar">
+          <div class="filters">
+            <input type="text" id="searchInput" placeholder="Buscar por cliente, descripción o ID..." />
+            <select id="statusFilter">
+              <option value="all">Todos los estados</option>
+            </select>
+            <select id="typeFilter">
+              <option value="all">Todos los tipos</option>
+            </select>
+            <select id="teamFilter">
+              <option value="all">Todos los equipos</option>
+              <option value="Soporte">Soporte</option>
+              <option value="Implementación">Implementación</option>
+              <option value="Desarrollo">Desarrollo</option>
+              <option value="Testing">Testing</option>
+            </select>
+          </div>
+          <button class="primary-btn" id="openCreateBtn">+ Crear requerimiento</button>
+        </div>
+
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Descripción</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+                <th>Etapa</th>
+                <th>Prioridad</th>
+                <th>Últ. respuesta</th>
+                <th>Horas</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="requirementsTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="kanbanSection">
+        <div class="kanban-board" id="kanbanBoard"></div>
+      </section>
+
+      <section class="section" id="jornadaSection">
+        <div class="jornada-grid">
+          <article class="panel">
+            <div class="panel-head">
+              <h3>Configuración de jornada</h3>
+            </div>
+            <div class="form-grid two-columns">
+              <label>
+                Turno
+                <select id="shiftSelect"></select>
+              </label>
+              <label>
+                Fecha
+                <input type="date" id="workDateInput" />
+              </label>
+              <label>
+                Hora ingreso
+                <input type="time" id="checkInInput" />
+              </label>
+              <label>
+                Hora salida
+                <input type="time" id="checkOutInput" />
+              </label>
+              <label>
+                Descanso / almuerzo
+                <input type="time" id="lunchInput" step="60" />
+              </label>
+              <label>
+                Objetivo productivo
+                <input type="time" id="goalInput" step="60" />
+              </label>
+            </div>
+            <div class="button-row">
+              <button class="primary-btn" id="saveJourneyBtn">Guardar jornada</button>
+              <button class="ghost-btn" id="fillShiftBtn">Aplicar turno</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <h3>Registro de tiempos</h3>
+            </div>
+            <div class="form-grid">
+              <label>
+                Requerimiento asociado
+                <select id="timeReqSelect"></select>
+              </label>
+              <label>
+                Tarea / observación
+                <input type="text" id="timeTaskInput" placeholder="Ej.: seguimiento ticket, prueba, configuración..." />
+              </label>
+              <label>
+                Tiempo
+                <input type="time" id="timeDurationInput" step="60" value="00:30" />
+              </label>
+              <label>
+                Tipo de tiempo
+                <select id="timeCategorySelect">
+                  <option value="productivo">Productivo</option>
+                  <option value="almuerzo">Almuerzo</option>
+                  <option value="improductivo">Improductivo</option>
+                  <option value="reunion">Reunión</option>
+                </select>
+              </label>
+            </div>
+            <div class="button-row">
+              <button class="primary-btn" id="addTimeBtn">Agregar tiempo</button>
+              <button class="ghost-btn" id="startTimerBtn">Iniciar temporizador</button>
+              <button class="ghost-btn" id="stopTimerBtn">Detener temporizador</button>
+            </div>
+            <div class="live-timer">
+              <span>Temporizador actual</span>
+              <strong id="liveTimer">00:00:00</strong>
+            </div>
+          </article>
+        </div>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h3>Detalle del día</h3>
+          </div>
+          <div id="timeEntriesList" class="time-entries"></div>
+        </article>
+      </section>
+
+      <section class="section" id="reportesSection">
+        <div class="report-grid">
+          <article class="panel">
+            <div class="panel-head">
+              <h3>Distribución por estado</h3>
+            </div>
+            <div id="statusReport" class="report-list"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-head">
+              <h3>Distribución por tipo</h3>
+            </div>
+            <div id="typeReport" class="report-list"></div>
+          </article>
+          <article class="panel wide">
+            <div class="panel-head">
+              <h3>Alertas operativas</h3>
+            </div>
+            <div id="alertsList" class="alerts-list"></div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal hidden" id="requirementModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="modalTitle">Nuevo requerimiento</h3>
+        <button class="icon-btn" id="closeModalBtn">×</button>
+      </div>
+      <form id="requirementForm">
+        <input type="hidden" id="reqIdField" />
+        <div class="form-grid two-columns">
+          <label>
+            Cliente
+            <input type="text" id="reqClient" required />
+          </label>
+          <label>
+            Equipo
+            <select id="reqTeam">
+              <option>Soporte</option>
+              <option>Implementación</option>
+              <option>Desarrollo</option>
+              <option>Testing</option>
+            </select>
+          </label>
+          <label class="full-width">
+            Descripción
+            <input type="text" id="reqDescription" required />
+          </label>
+          <label>
+            Tipo
+            <select id="reqType"></select>
+          </label>
+          <label>
+            Estado
+            <select id="reqStatus"></select>
+          </label>
+          <label>
+            Etapa
+            <select id="reqStage"></select>
+          </label>
+          <label>
+            Prioridad
+            <select id="reqPriority">
+              <option value="Alta">Alta</option>
+              <option value="Media">Media</option>
+              <option value="Baja">Baja</option>
+            </select>
+          </label>
+          <label>
+            Fecha origen
+            <input type="date" id="reqOriginDate" required />
+          </label>
+          <label>
+            Última respuesta
+            <input type="date" id="reqLastResponseDate" />
+          </label>
+          <label>
+            Horas invertidas
+            <input type="time" id="reqHours" step="60" value="00:00" />
+          </label>
+          <label class="full-width">
+            Observaciones
+            <textarea id="reqNotes" rows="4"></textarea>
+          </label>
+          <label>
+            Marcar como “sin respuesta”
+            <select id="reqNoReply">
+              <option value="false">No</option>
+              <option value="true">Sí</option>
+            </select>
+          </label>
+          <label>
+            En espera de configurar
+            <select id="reqWaitingConfig">
+              <option value="false">No</option>
+              <option value="true">Sí</option>
+            </select>
+          </label>
+        </div>
+        <div class="button-row end">
+          <button type="button" class="ghost-btn" id="cancelModalBtn">Cancelar</button>
+          <button type="submit" class="primary-btn">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
